@@ -25,6 +25,8 @@ jobs:
           SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
           SNOWFLAKE_USER: GITHUB_DCM_SVC
         run: |
+          echo "User=$SNOWFLAKE_USER"
+          echo "Account=$SNOWFLAKE_ACCOUNT"
           snow sql -q "select CURRENT_USER(),CURRENT_ROLE(),CURRENT_ACCOUNT()" -x
 
       - name: DCM Plan
