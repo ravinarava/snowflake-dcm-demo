@@ -19,6 +19,9 @@ jobs:
         uses: snowflakedb/snowflake-actions@v3
 
       - name: Verify OIDC Authentication
+        env:
+          SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+          SNOWFLAKE_USER: GITHUB_OIDC_SVC
         run: |
           snow sql -q "select CURRENT_USER(),CURRENT_ROLE(),CURRENT_ACCOUNT()"
 
