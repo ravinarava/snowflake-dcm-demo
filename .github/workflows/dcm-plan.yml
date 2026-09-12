@@ -29,4 +29,4 @@ jobs:
 
       - name: DCM Plan
         run: |
-          snow dcm plan --target DEV  
+          snow dcm plan --target DEV -x 
