@@ -1,0 +1,27 @@
+name: DCM Plan
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+    id-token: write
+    contents: read
+
+jobs:
+  dcm-plan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@4
+
+      - name: Install Snowflake CLI
+        uses: snowflakedb/snowflake-cli-action@v1
+
+      - name: Verify OIDC Authentication
+        run: |
+          snow sql -q "select CURRENT_USER(),CURRENT_ROLE(),CURRENT_ACCOUNT()"
+
+      - name: DCM Plan
+        run: |
+          snow dcm plan --target DEV  
