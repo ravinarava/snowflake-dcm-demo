@@ -1,15 +1,20 @@
 name: DCM Plan
+
 on:
-  pull_request:
   workflow_dispatch:
+  pull_request:
 
 permissions:
-    id-token: write
-    contents: read
+  id-token: write
+  contents: read
 
 jobs:
   dcm-plan:
     runs-on: ubuntu-latest
+
+    env:
+      SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+      SNOWFLAKE_USER: GITHUB_DCM_SVC
 
     steps:
       - name: Checkout
@@ -21,18 +26,11 @@ jobs:
           use-oidc: true
 
       - name: Verify OIDC Authentication
-        env:
-          SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
-          SNOWFLAKE_USER: GITHUB_DCM_SVC
         run: |
-          echo "User=$SNOWFLAKE_USER"
           echo "Account=$SNOWFLAKE_ACCOUNT"
+          echo "User=$SNOWFLAKE_USER"
           snow sql -q "select CURRENT_USER(),CURRENT_ROLE(),CURRENT_ACCOUNT()" -x
 
       - name: DCM Plan
         run: |
-          snow dcm plan --target DEV -x 
-      - name: Debug Variables
-        run: |
-          echo "Account=$SNOWFLAKE_ACCOUNT"
-          echo "User=$SNOWFLAKE_USER"
+          snow dcm plan --target DEV -x
