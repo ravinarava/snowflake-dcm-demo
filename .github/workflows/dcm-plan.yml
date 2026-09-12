@@ -32,3 +32,7 @@ jobs:
       - name: DCM Plan
         run: |
           snow dcm plan --target DEV -x 
+      - name: Debug Variables
+        run: |
+          echo "Account=$SNOWFLAKE_ACCOUNT"
+          echo "User=$SNOWFLAKE_USER"
