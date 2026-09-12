@@ -23,7 +23,7 @@ jobs:
       - name: Verify OIDC Authentication
         env:
           SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
-          SNOWFLAKE_USER: GITHUB_OIDC_SVC
+          SNOWFLAKE_USER: GITHUB_DCM_SVC
         run: |
           snow sql -q "select CURRENT_USER(),CURRENT_ROLE(),CURRENT_ACCOUNT()" -x
 
