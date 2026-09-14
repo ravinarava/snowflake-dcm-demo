@@ -16,7 +16,9 @@ jobs:
          run: |
            cd terraform
            terraform init      
-
+       - name: Show Terraform Environment
+         run: |
+           env | grep SNOWFLAKE
        - name: Terraform Validate
          run: |
            cd terraform
