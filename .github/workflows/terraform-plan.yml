@@ -7,6 +7,9 @@ jobs:
  terraform-plan:
      runs-on: ubuntu-latest
 
+     env:
+        SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+        SNOWFLAKE_USER: GITHUB_TERRAFORM_SVC
      steps:
        - uses: actions/checkout@v4
        - name: Setup Terraform
