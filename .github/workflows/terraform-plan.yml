@@ -21,3 +21,8 @@ jobs:
          run: |
            cd terraform
            terraform validate    
+
+       - name: Terraform Plan
+         run: |
+           cd terraform
+           terraform plan     
