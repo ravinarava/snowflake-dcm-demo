@@ -12,5 +12,5 @@ provider "snowflake" {
     user = "GITHUB_DCM_SVC"
 }
 resource "snowflake_account_role" "tf_platform_role" {
-    name = "TF_PLATFORM_ROLE"
+    name = "TF_PLATFORM_ROLE_V1"
 }
