@@ -37,7 +37,7 @@ jobs:
            cd terraform
            terraform validate    
 
-       - name: Terraform Plan
+       - name: Terraform Plan Snowflake Foundation
          run: |
            cd terraform
            terraform plan     
