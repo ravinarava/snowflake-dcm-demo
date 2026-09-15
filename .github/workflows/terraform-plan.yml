@@ -35,7 +35,13 @@ jobs:
            cd terraform
            terraform validate    
 
-       - name: Terraform Plan Snowflake Foundation
+       - name: Terraform Plan  Foundation Layer
          run: |
            cd terraform
            terraform plan     
+ dcm-plan:
+     runs-on: ubuntu-latest
+     needs: terraform-plan
+     steps:
+      - name: Placeholder
+        run: echo "DCM Plan will run after Terraform Plan"  
