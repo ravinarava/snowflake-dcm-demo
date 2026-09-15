@@ -3,6 +3,9 @@ name: Terraform Plan
 on:
   workflow_dispatch:
 
+permissions:
+    id-token: write
+    contents: read
 jobs:
  terraform-plan:
      runs-on: ubuntu-latest
@@ -13,6 +16,9 @@ jobs:
         SNOWFLAKE_WORKLOAD_IDENTITY_PROVIDER: OIDC
      steps:
        - uses: actions/checkout@v4
+       - uses: snowflakedb/snowflake-actions@v3
+         with:
+           use-oidc: true
        - name: Setup Terraform
          uses: hashicorp/setup-terraform@v3
 
@@ -20,6 +26,7 @@ jobs:
          run: |
            cd terraform
            terraform init      
+        
        - name: Show Terraform Environment
          run: |
            env | grep SNOWFLAKE
