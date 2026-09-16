@@ -1,0 +1,33 @@
+name: DCM Deploy
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  dcm-deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+      SNOWFLAKE_USER: GITHUB_DCM_SVC
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Snowflake CLI
+        uses: snowflakedb/snowflake-actions@v3
+        with:
+          use-oidc: true
+
+      - name: Verify OIDC Authentication
+        run: |
+          snow sql -q "select CURRENT_USER(),CURRENT_ROLE(),CURRENT_ACCOUNT()" -x
+
+      - name: DCM Deploy
+        run: |
+          snow dcm deploy --target DEV -x
