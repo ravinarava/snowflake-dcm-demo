@@ -6,3 +6,11 @@ on:
       - main
 
   workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Validation Placeholder
+        run: echo "CI Validation workflow created"
