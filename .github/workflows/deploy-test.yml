@@ -16,7 +16,7 @@ jobs:
            name: TEST
 
     env:
-      SNOWFLAKE_USER: GITHUB_DCM_SVC
+      SNOWFLAKE_USER: GITHUB_TEST_SVC
       SNOWFLAKE_WORKLOAD_IDENTITY_PROVIDER: OIDC
 
     steps:
@@ -44,7 +44,7 @@ jobs:
 
     env:
       SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
-      SNOWFLAKE_USER: GITHUB_DCM_SVC
+      SNOWFLAKE_USER: GITHUB_TEST_SVC
 
     steps:
       - uses: actions/checkout@v4
