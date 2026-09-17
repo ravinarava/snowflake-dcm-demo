@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      SNOWFLAKE_USER: GITHUB_TERRAFORM_SVC
+      SNOWFLAKE_USER: GITHUB_DCM_SVC
       SNOWFLAKE_WORKLOAD_IDENTITY_PROVIDER: OIDC
 
     steps:
