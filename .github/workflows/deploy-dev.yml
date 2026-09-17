@@ -29,6 +29,9 @@ jobs:
         run: |
           cd terraform
           terraform init
+      - name: Verify Terraform Identity
+         run: |
+           snow sql -q "select current_user(), current_role(), current_account()" -x    
 
       - name: Terraform Apply Foundation Layer
         run: |
