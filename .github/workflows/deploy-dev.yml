@@ -1,0 +1,16 @@
+name: Deploy DEV
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy Placeholder
+        run: echo "Deploy DEV workflow created"

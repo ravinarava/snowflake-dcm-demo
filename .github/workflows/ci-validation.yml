@@ -7,10 +7,56 @@ on:
 
   workflow_dispatch:
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
-  validate:
+
+  terraform-plan:
     runs-on: ubuntu-latest
 
+    env:
+      SNOWFLAKE_USER: GITHUB_TERRAFORM_SVC
+      SNOWFLAKE_WORKLOAD_IDENTITY_PROVIDER: OIDC
+
     steps:
-      - name: Validation Placeholder
-        run: echo "CI Validation workflow created"
+      - uses: actions/checkout@v4
+
+      - uses: snowflakedb/snowflake-actions@v3
+        with:
+          use-oidc: true
+
+      - uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        run: |
+          cd terraform
+          terraform init
+
+      - name: Terraform Validate
+        run: |
+          cd terraform
+          terraform validate
+
+      - name: Terraform Plan Foundation Layer
+        run: |
+          cd terraform
+          terraform plan
+
+  dcm-plan:
+    runs-on: ubuntu-latest
+    env:
+      SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+      SNOWFLAKE_USER: GITHUB_DCM_SVC
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: snowflakedb/snowflake-actions@v3
+        with:
+          use-oidc: true
+
+      - name: DCM Plan Object Layer
+        run: |
+          snow dcm plan --target DEV -x
