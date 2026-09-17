@@ -8,9 +8,48 @@ permissions:
   contents: read
 
 jobs:
-  deploy:
+
+  terraform-apply:
     runs-on: ubuntu-latest
 
+    env:
+      SNOWFLAKE_USER: GITHUB_TERRAFORM_SVC
+      SNOWFLAKE_WORKLOAD_IDENTITY_PROVIDER: OIDC
+
     steps:
-      - name: Deploy Placeholder
-        run: echo "Deploy DEV workflow created"
+      - uses: actions/checkout@v4
+
+      - uses: snowflakedb/snowflake-actions@v3
+        with:
+          use-oidc: true
+
+      - uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        run: |
+          cd terraform
+          terraform init
+
+      - name: Terraform Apply Foundation Layer
+        run: |
+          cd terraform
+          terraform apply -auto-approve
+
+  dcm-deploy:
+    runs-on: ubuntu-latest
+    needs: terraform-apply
+
+    env:
+      SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+      SNOWFLAKE_USER: GITHUB_DCM_SVC
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: snowflakedb/snowflake-actions@v3
+        with:
+          use-oidc: true
+
+      - name: DCM Deploy Object Layer
+        run: |
+          snow dcm deploy --target DEV -x
