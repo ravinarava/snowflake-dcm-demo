@@ -34,6 +34,10 @@ jobs:
         run: |
           cd terraform
           terraform apply -auto-approve
+      - name: Show Snowflake Environment
+        run: |
+          env | grep SNOWFLAKE
+      
 
   dcm-deploy:
     runs-on: ubuntu-latest
