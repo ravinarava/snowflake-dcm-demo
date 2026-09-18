@@ -32,6 +32,15 @@ jobs:
         run: |
           cd terraform
           terraform init
+
+      - name: Import Existing Foundation Role
+        run: |
+          cd terraform
+          if terraform state show snowflake_account_role.tf_platform_role > /dev/null 2>&1; then
+            echo "Foundation role is already in Terraform state"
+          else
+            terraform import snowflake_account_role.tf_platform_role TF_PLATFORM_ROLE_V1
+          fi
       
       - name: Terraform Apply Foundation Layer
         run: |
