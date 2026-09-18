@@ -45,9 +45,13 @@ jobs:
     runs-on: ubuntu-latest
     needs: terraform-apply
 
+    environment:
+      name: TEST
+
     env:
       SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
-      SNOWFLAKE_USER: GITHUB_DCM_SVC
+      SNOWFLAKE_USER: GITHUB_TEST_SVC
+      SNOWFLAKE_WORKLOAD_IDENTITY_PROVIDER: OIDC
 
     steps:
       - uses: actions/checkout@v4
