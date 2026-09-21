@@ -1,0 +1,134 @@
+name: Snowflake Validation
+
+on:
+  workflow_call:
+    inputs:
+      environment_name:
+        description: GitHub environment containing the Snowflake account configuration
+        required: true
+        type: string
+      dcm_target:
+        description: DCM manifest target to validate
+        required: true
+        type: string
+      terraform_user:
+        description: Snowflake workload identity used for Terraform validation
+        required: true
+        type: string
+      dcm_user:
+        description: Snowflake workload identity used for DCM validation
+        required: true
+        type: string
+      terraform_var_file:
+        description: Environment-specific Terraform variable file
+        required: true
+        type: string
+    secrets:
+      SNOWFLAKE_ACCOUNT:
+        description: Snowflake account identifier
+        required: true
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  validate-inputs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Validate environment and identity mapping
+        env:
+          ENVIRONMENT_NAME: ${{ inputs.environment_name }}
+          DCM_TARGET: ${{ inputs.dcm_target }}
+          TERRAFORM_USER: ${{ inputs.terraform_user }}
+          DCM_USER: ${{ inputs.dcm_user }}
+          TERRAFORM_VAR_FILE: ${{ inputs.terraform_var_file }}
+        run: |
+          set -euo pipefail
+
+          case "${ENVIRONMENT_NAME}:${DCM_TARGET}:${TERRAFORM_USER}:${DCM_USER}:${TERRAFORM_VAR_FILE}" in
+            DEV:DEV:GITHUB_DEV_TERRAFORM_SVC:GITHUB_DEV_DCM_SVC:environments/dev.tfvars|TEST:TEST:GITHUB_TEST_TERRAFORM_SVC:GITHUB_TEST_DCM_SVC:environments/test.tfvars)
+              echo "Validated ${ENVIRONMENT_NAME} environment, ${DCM_TARGET} target, and workload identities."
+              ;;
+            *)
+              echo "Unsupported environment, target, or workload identity combination." >&2
+              exit 1
+              ;;
+          esac
+
+  terraform-plan:
+    needs: validate-inputs
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: ${{ inputs.environment_name }}
+    env:
+      SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+      SNOWFLAKE_USER: ${{ inputs.terraform_user }}
+      SNOWFLAKE_WORKLOAD_IDENTITY_PROVIDER: OIDC
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: snowflakedb/snowflake-actions@v3
+        with:
+          use-oidc: true
+
+      - name: Verify Snowflake Terraform Identity
+        run: snow sql -q "select CURRENT_USER(), CURRENT_ROLE(), CURRENT_ACCOUNT()" -x
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
+
+      - name: Terraform Init
+        working-directory: terraform
+        run: terraform init -input=false
+
+      - name: Import Existing Foundation Role
+        working-directory: terraform
+        run: |
+          if terraform state show snowflake_account_role.tf_platform_role > /dev/null 2>&1; then
+            echo "Foundation role is already in Terraform state"
+          else
+            terraform import -input=false \
+              -var-file="${{ inputs.terraform_var_file }}" \
+              snowflake_account_role.tf_platform_role TF_PLATFORM_ROLE_V1
+          fi
+
+      - name: Terraform Validate
+        working-directory: terraform
+        run: terraform validate
+
+      - name: Terraform Format Check
+        working-directory: terraform
+        run: terraform fmt -check -recursive
+
+      - name: Terraform Plan Foundation Layer
+        working-directory: terraform
+        run: terraform plan -input=false -no-color -var-file="${{ inputs.terraform_var_file }}"
+
+  dcm-plan:
+    needs: validate-inputs
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: ${{ inputs.environment_name }}
+    env:
+      SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+      SNOWFLAKE_USER: ${{ inputs.dcm_user }}
+      SNOWFLAKE_WORKLOAD_IDENTITY_PROVIDER: OIDC
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: snowflakedb/snowflake-actions@v3
+        with:
+          use-oidc: true
+
+      - name: Verify Snowflake DCM Identity
+        run: snow sql -q "select CURRENT_USER(), CURRENT_ROLE(), CURRENT_ACCOUNT()" -x
+
+      - name: DCM Plan Object Layer
+        run: snow dcm plan --target "${{ inputs.dcm_target }}" -x

@@ -6,57 +6,45 @@ on:
       - main
 
   workflow_dispatch:
+    inputs:
+      validation_environment:
+        description: Environment to validate
+        required: true
+        type: choice
+        default: DEV
+        options:
+          - DEV
+          - TEST
 
 permissions:
-  id-token: write
   contents: read
+  id-token: write
+
+concurrency:
+  group: snowflake-validation-${{ github.event_name }}-${{ inputs.validation_environment || 'DEV' }}
+  cancel-in-progress: false
 
 jobs:
-
-  terraform-plan:
-    runs-on: ubuntu-latest
-
-    env:
-      SNOWFLAKE_USER: GITHUB_TERRAFORM_SVC
-      SNOWFLAKE_WORKLOAD_IDENTITY_PROVIDER: OIDC
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: snowflakedb/snowflake-actions@v3
-        with:
-          use-oidc: true
-
-      - uses: hashicorp/setup-terraform@v3
-
-      - name: Terraform Init
-        run: |
-          cd terraform
-          terraform init
-
-      - name: Terraform Validate
-        run: |
-          cd terraform
-          terraform validate
-
-      - name: Terraform Plan Foundation Layer
-        run: |
-          cd terraform
-          terraform plan
-
-  dcm-plan:
-    runs-on: ubuntu-latest
-    env:
+  validate-dev:
+    if: github.event_name == 'pull_request' || inputs.validation_environment == 'DEV'
+    uses: ./.github/workflows/validation.yml
+    with:
+      environment_name: DEV
+      dcm_target: DEV
+      terraform_user: GITHUB_DEV_TERRAFORM_SVC
+      dcm_user: GITHUB_DEV_DCM_SVC
+      terraform_var_file: environments/dev.tfvars
+    secrets:
       SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
-      SNOWFLAKE_USER: GITHUB_DCM_SVC
 
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: snowflakedb/snowflake-actions@v3
-        with:
-          use-oidc: true
-
-      - name: DCM Plan Object Layer
-        run: |
-          snow dcm plan --target DEV -x
+  validate-test:
+    if: github.event_name == 'workflow_dispatch' && inputs.validation_environment == 'TEST'
+    uses: ./.github/workflows/validation.yml
+    with:
+      environment_name: TEST
+      dcm_target: TEST
+      terraform_user: GITHUB_TEST_TERRAFORM_SVC
+      dcm_user: GITHUB_TEST_DCM_SVC
+      terraform_var_file: environments/test.tfvars
+    secrets:
+      SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}

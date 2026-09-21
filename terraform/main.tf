@@ -1,3 +1,3 @@
 resource "snowflake_account_role" "tf_platform_role" {
-    name = "TF_PLATFORM_ROLE_V1"
+    name = var.platform_role_name
 }
